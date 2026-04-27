@@ -1,6 +1,7 @@
 package dmitrykovalev.stringlife.repositories
 
 import dmitrykovalev.stringlife.db.tables.Instruments
+import dmitrykovalev.stringlife.db.tables.Sessions
 import dmitrykovalev.stringlife.models.Instrument
 import dmitrykovalev.stringlife.models.InstrumentRequest
 import kotlinx.datetime.Clock
@@ -13,12 +14,14 @@ import java.util.UUID
 class InstrumentRepository {
 
     fun findAll(): List<Instrument> = transaction {
-        Instruments.selectAll().map { it.toInstrument() }
+        Instruments.selectAll()
+            .where { Instruments.deletedAt.isNull() }
+            .map { it.toInstrument() }
     }
 
     fun findById(id: UUID): Instrument = transaction {
         Instruments.selectAll()
-            .where { Instruments.id eq id }
+            .where { (Instruments.id eq id) and Instruments.deletedAt.isNull() }
             .firstOrNull()
             ?.toInstrument()
             ?: throw NoSuchElementException("Instrument $id not found")
@@ -38,7 +41,7 @@ class InstrumentRepository {
     }
 
     fun update(id: UUID, request: InstrumentRequest): Instrument = transaction {
-        val count = Instruments.update({ Instruments.id eq id }) {
+        val count = Instruments.update({ (Instruments.id eq id) and Instruments.deletedAt.isNull() }) {
             it[name] = request.name
             it[type] = request.type
             it[stringCount] = request.stringCount
@@ -50,7 +53,13 @@ class InstrumentRepository {
     }
 
     fun delete(id: UUID): Unit = transaction {
-        val count = Instruments.deleteWhere { Instruments.id eq id }
+        val now = Clock.System.now()
+        Sessions.update({ (Sessions.instrumentId eq id) and Sessions.deletedAt.isNull() }) {
+            it[Sessions.deletedAt] = now
+        }
+        val count = Instruments.update({ (Instruments.id eq id) and Instruments.deletedAt.isNull() }) {
+            it[deletedAt] = now
+        }
         if (count == 0) throw NoSuchElementException("Instrument $id not found")
     }
 

@@ -6,25 +6,26 @@ import dmitrykovalev.stringlife.models.SessionRequest
 import dmitrykovalev.stringlife.models.SessionUpdateRequest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import java.util.UUID
 
 class SessionRepository {
 
     fun findAll(instrumentId: UUID? = null): List<Session> = transaction {
-        val query = Sessions.selectAll()
-        instrumentId?.let { query.where { Sessions.instrumentId eq it } }
-        query.map { it.toSession() }
+        Sessions.selectAll().where {
+                val base = Sessions.deletedAt.isNull()
+                if (instrumentId != null) base and (Sessions.instrumentId eq instrumentId) else base
+            }.map { it.toSession() }
     }
 
     fun findById(id: UUID): Session = transaction {
-        Sessions.selectAll()
-            .where { Sessions.id eq id }
-            .firstOrNull()
-            ?.toSession()
-            ?: throw NoSuchElementException("Session $id not found")
+        Sessions.selectAll().where { (Sessions.id eq id) and Sessions.deletedAt.isNull() }
+            .firstOrNull()?.toSession() ?: throw NoSuchElementException("Session $id not found")
     }
 
     fun create(request: SessionRequest): Session = transaction {
@@ -40,7 +41,7 @@ class SessionRepository {
     }
 
     fun update(id: UUID, request: SessionUpdateRequest): Session = transaction {
-        val count = Sessions.update({ Sessions.id eq id }) {
+        val count = Sessions.update({ (Sessions.id eq id) and Sessions.deletedAt.isNull() }) {
             request.endTime?.let { t -> it[endTime] = Instant.parse(t) }
             it[notes] = request.notes
         }
@@ -49,7 +50,9 @@ class SessionRepository {
     }
 
     fun delete(id: UUID): Unit = transaction {
-        val count = Sessions.deleteWhere { Sessions.id eq id }
+        val count = Sessions.update({ (Sessions.id eq id) and Sessions.deletedAt.isNull() }) {
+            it[deletedAt] = Clock.System.now()
+        }
         if (count == 0) throw NoSuchElementException("Session $id not found")
     }
 

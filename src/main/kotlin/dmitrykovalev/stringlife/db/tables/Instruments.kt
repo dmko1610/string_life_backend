@@ -12,6 +12,7 @@ object Instruments : Table("instruments") {
     val lastStringChangeDate = date("last_string_change_date").nullable()
     val notes = text("notes").nullable()
     val createdAt = timestamp("created_at")
+    val deletedAt = timestamp("deleted_at").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

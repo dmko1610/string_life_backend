@@ -10,6 +10,7 @@ object Sessions : Table("sessions") {
     val endTime = timestamp("end_time").nullable()
     val notes = text("notes").nullable()
     val createdAt = timestamp("created_at")
+    val deletedAt = timestamp("deleted_at").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }
