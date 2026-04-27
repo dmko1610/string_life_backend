@@ -4,6 +4,8 @@ val kotlinxDatetimeVersion = "0.6.1"
 val logbackVersion = "1.5.12"
 val hikariVersion = "5.1.0"
 val postgresVersion = "42.7.3"
+val junitVersion = "5.10.1"
+val h2Version = "2.2.224"
 
 plugins {
     kotlin("jvm") version "2.1.0"
@@ -39,6 +41,17 @@ dependencies {
     implementation("com.zaxxer:HikariCP:$hikariVersion")
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
+
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("com.h2database:h2:$h2Version")
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 tasks.shadowJar {
