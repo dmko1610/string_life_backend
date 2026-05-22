@@ -5,6 +5,7 @@ import dmitrykovalev.stringlife.db.tables.Sessions
 import dmitrykovalev.stringlife.models.Instrument
 import dmitrykovalev.stringlife.models.InstrumentRequest
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -12,9 +13,16 @@ import java.util.UUID
 
 class InstrumentRepository {
 
-    fun findAll(): List<Instrument> = transaction {
+    fun findAll(updatedSince: Long? = null): List<Instrument> = transaction {
         Instruments.selectAll()
-            .where { Instruments.deletedAt.isNull() }
+            .where {
+                val notDeleted = Instruments.deletedAt.isNull()
+                if (updatedSince != null) {
+                    notDeleted and (Instruments.updatedAt greaterEq Instant.fromEpochMilliseconds(updatedSince))
+                } else {
+                    notDeleted
+                }
+            }
             .map { it.toInstrument() }
     }
 
@@ -34,6 +42,7 @@ class InstrumentRepository {
             it[lastStringChangeDate] = request.lastStringChangeDate?.let { d -> LocalDate.parse(d) }
             it[notes] = request.notes
             it[createdAt] = Clock.System.now()
+            it[updatedAt] = Clock.System.now()
         }[Instruments.id]
 
         findById(insertedId)
@@ -46,6 +55,7 @@ class InstrumentRepository {
             it[stringCount] = request.stringCount
             it[lastStringChangeDate] = request.lastStringChangeDate?.let { d -> LocalDate.parse(d) }
             it[notes] = request.notes
+            it[updatedAt] = Clock.System.now()
         }
         if (count == 0) throw NoSuchElementException("Instrument $id not found")
         findById(id)
@@ -69,6 +79,7 @@ class InstrumentRepository {
         stringCount = this[Instruments.stringCount],
         lastStringChangeDate = this[Instruments.lastStringChangeDate]?.toString(),
         notes = this[Instruments.notes],
-        createdAt = this[Instruments.createdAt].toString()
+        createdAt = this[Instruments.createdAt].toString(),
+        updatedAt = this[Instruments.updatedAt].toEpochMilliseconds()
     )
 }

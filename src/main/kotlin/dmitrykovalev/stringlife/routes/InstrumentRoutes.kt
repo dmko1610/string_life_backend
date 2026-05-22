@@ -11,7 +11,8 @@ import java.util.UUID
 fun Route.instrumentRoutes(repository: InstrumentRepository) {
     route("/instruments") {
         get {
-            call.respond(repository.findAll())
+            val updatedSince = call.request.queryParameters["updatedSince"]?.toLongOrNull()
+            call.respond(repository.findAll(updatedSince))
         }
 
         post {

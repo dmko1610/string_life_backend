@@ -10,7 +10,8 @@ data class Instrument(
     val stringCount: Int,
     val lastStringChangeDate: String? = null,
     val notes: String? = null,
-    val createdAt: String
+    val createdAt: String,
+    val updatedAt: Long
 )
 
 @Serializable
