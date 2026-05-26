@@ -18,9 +18,9 @@ class SessionRepository {
 
     fun findAll(instrumentId: UUID? = null): List<Session> = transaction {
         Sessions.selectAll().where {
-                val base = Sessions.deletedAt.isNull()
-                if (instrumentId != null) base and (Sessions.instrumentId eq instrumentId) else base
-            }.map { it.toSession() }
+            val base = Sessions.deletedAt.isNull()
+            if (instrumentId != null) base and (Sessions.instrumentId eq instrumentId) else base
+        }.map { it.toSession() }
     }
 
     fun findById(id: UUID): Session = transaction {
@@ -29,15 +29,16 @@ class SessionRepository {
     }
 
     fun create(request: SessionRequest): Session = transaction {
-        val insertedId = Sessions.insert {
+        val sessionId = request.id?.let { UUID.fromString(it) } ?: UUID.randomUUID()
+        Sessions.insert {
+            it[id] = sessionId
             it[instrumentId] = UUID.fromString(request.instrumentId)
             it[startTime] = Instant.parse(request.startTime)
             it[endTime] = null
             it[notes] = request.notes
             it[createdAt] = Clock.System.now()
-        }[Sessions.id]
-
-        findById(insertedId)
+        }
+        findById(sessionId)
     }
 
     fun update(id: UUID, request: SessionUpdateRequest): Session = transaction {

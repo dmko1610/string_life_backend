@@ -14,8 +14,10 @@ data class Session(
 
 @Serializable
 data class SessionRequest(
+    val id: String? = null,
     val instrumentId: String,
     val startTime: String,
+    val endTime: String? = null,
     val notes: String? = null
 )
 

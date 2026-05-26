@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 object Sessions : Table("sessions") {
-    val id = uuid("id").autoGenerate()
+    val id = uuid("id")
     val instrumentId = uuid("instrument_id").references(Instruments.id)
     val startTime = timestamp("start_time")
     val endTime = timestamp("end_time").nullable()
