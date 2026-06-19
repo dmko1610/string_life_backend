@@ -34,7 +34,7 @@ class SessionRepository {
             it[id] = sessionId
             it[instrumentId] = UUID.fromString(request.instrumentId)
             it[startTime] = Instant.parse(request.startTime)
-            it[endTime] = null
+            it[endTime] = request.endTime?.let {t -> Instant.parse(t) }
             it[notes] = request.notes
             it[createdAt] = Clock.System.now()
         }

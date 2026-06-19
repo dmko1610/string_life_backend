@@ -19,10 +19,13 @@ class SessionRepositoryTest {
     private val repo = SessionRepository()
 
     companion object {
-        @BeforeAll @JvmStatic fun initDb() = TestDatabase.init()
+        @BeforeAll
+        @JvmStatic
+        fun initDb() = TestDatabase.init()
     }
 
-    @BeforeEach fun resetDb() = TestDatabase.reset()
+    @BeforeEach
+    fun resetDb() = TestDatabase.reset()
 
     private fun createInstrument() =
         instrumentRepo.create(InstrumentRequest("Telecaster", "Electric", 6))
@@ -30,7 +33,8 @@ class SessionRepositoryTest {
     private fun aSessionRequest(instrumentId: String) =
         SessionRequest(instrumentId = instrumentId, startTime = "2026-01-01T10:00:00Z")
 
-    @Test fun `create and findById return the same session`() {
+    @Test
+    fun `create and findById return the same session`() {
         val instrument = createInstrument()
         val created = repo.create(aSessionRequest(instrument.id))
         val found = repo.findById(UUID.fromString(created.id))
@@ -39,14 +43,16 @@ class SessionRepositoryTest {
         assertNull(found.endTime)
     }
 
-    @Test fun `findAll returns all active sessions`() {
+    @Test
+    fun `findAll returns all active sessions`() {
         val instrument = createInstrument()
         repo.create(aSessionRequest(instrument.id))
         repo.create(aSessionRequest(instrument.id))
         assertEquals(2, repo.findAll().size)
     }
 
-    @Test fun `findAll filtered by instrumentId returns only matching sessions`() {
+    @Test
+    fun `findAll filtered by instrumentId returns only matching sessions`() {
         val i1 = createInstrument()
         val i2 = createInstrument()
         repo.create(aSessionRequest(i1.id))
@@ -56,21 +62,24 @@ class SessionRepositoryTest {
         assertEquals(i1.id, filtered[0].instrumentId)
     }
 
-    @Test fun `findAll excludes soft-deleted sessions`() {
+    @Test
+    fun `findAll excludes soft-deleted sessions`() {
         val instrument = createInstrument()
         val created = repo.create(aSessionRequest(instrument.id))
         repo.delete(UUID.fromString(created.id))
         assertEquals(0, repo.findAll().size)
     }
 
-    @Test fun `findAll with filter excludes deleted sessions for that instrument`() {
+    @Test
+    fun `findAll with filter excludes deleted sessions for that instrument`() {
         val instrument = createInstrument()
         val created = repo.create(aSessionRequest(instrument.id))
         repo.delete(UUID.fromString(created.id))
         assertEquals(0, repo.findAll(UUID.fromString(instrument.id)).size)
     }
 
-    @Test fun `update sets endTime and notes`() {
+    @Test
+    fun `update sets endTime and notes`() {
         val instrument = createInstrument()
         val created = repo.create(aSessionRequest(instrument.id))
         val updated = repo.update(
@@ -81,13 +90,15 @@ class SessionRepositoryTest {
         assertEquals("Great session", updated.notes)
     }
 
-    @Test fun `update throws for unknown id`() {
+    @Test
+    fun `update throws for unknown id`() {
         assertThrows<NoSuchElementException> {
             repo.update(UUID.randomUUID(), SessionUpdateRequest())
         }
     }
 
-    @Test fun `delete soft-deletes so findById throws`() {
+    @Test
+    fun `delete soft-deletes so findById throws`() {
         val instrument = createInstrument()
         val created = repo.create(aSessionRequest(instrument.id))
         repo.delete(UUID.fromString(created.id))
@@ -96,9 +107,30 @@ class SessionRepositoryTest {
         }
     }
 
-    @Test fun `delete throws for unknown id`() {
+    @Test
+    fun `delete throws for unknown id`() {
         assertThrows<NoSuchElementException> {
             repo.delete(UUID.randomUUID())
         }
+    }
+
+    @Test
+    fun `create stores client id endTime and notes when provided`() {
+        val instrument = createInstrument()
+        val clientId = UUID.randomUUID().toString()
+
+        val created = repo.create(
+            SessionRequest(
+                id = clientId,
+                instrumentId = instrument.id,
+                startTime = "2026-01-01T10:00:00Z",
+                endTime = "2026-01-01T11:00:00Z",
+                notes = "Great session"
+            )
+        )
+
+        assertEquals(clientId, created.id)
+        assertNotNull(created.endTime)
+        assertEquals("Great session", created.notes)
     }
 }

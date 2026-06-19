@@ -3,13 +3,24 @@ package dmitrykovalev.stringlife.routes
 import dmitrykovalev.stringlife.TestDatabase
 import dmitrykovalev.stringlife.plugins.configureRouting
 import dmitrykovalev.stringlife.plugins.configureSerialization
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.testing.*
-import kotlinx.serialization.json.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.testing.ApplicationTestBuilder
+import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -19,10 +30,13 @@ import kotlin.test.assertNotNull
 class SessionRoutesTest {
 
     companion object {
-        @BeforeAll @JvmStatic fun initDb() = TestDatabase.init()
+        @BeforeAll
+        @JvmStatic
+        fun initDb() = TestDatabase.init()
     }
 
-    @BeforeEach fun resetDb() = TestDatabase.reset()
+    @BeforeEach
+    fun resetDb() = TestDatabase.reset()
 
     private fun testApp(block: suspend ApplicationTestBuilder.() -> Unit) = testApplication {
         application {
@@ -52,13 +66,15 @@ class SessionRoutesTest {
         return Json.parseToJsonElement(response.bodyAsText()).jsonObject
     }
 
-    @Test fun `GET api sessions returns empty list initially`() = testApp {
+    @Test
+    fun `GET api sessions returns empty list initially`() = testApp {
         val response = client.get("/api/sessions")
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals("[]", response.bodyAsText().trim())
     }
 
-    @Test fun `POST api sessions creates session and returns 201`() = testApp {
+    @Test
+    fun `POST api sessions creates session and returns 201`() = testApp {
         val instrumentId = createInstrumentId()
         val response = jsonClient().post("/api/sessions") {
             contentType(ContentType.Application.Json)
@@ -70,7 +86,8 @@ class SessionRoutesTest {
         assertNotNull(body["id"]?.jsonPrimitive?.content)
     }
 
-    @Test fun `GET api sessions id returns created session`() = testApp {
+    @Test
+    fun `GET api sessions id returns created session`() = testApp {
         val instrumentId = createInstrumentId()
         val created = createSession(instrumentId)
         val id = created["id"]!!.jsonPrimitive.content
@@ -78,12 +95,14 @@ class SessionRoutesTest {
         assertEquals(HttpStatusCode.OK, response.status)
     }
 
-    @Test fun `GET api sessions unknown id returns 404`() = testApp {
+    @Test
+    fun `GET api sessions unknown id returns 404`() = testApp {
         val response = client.get("/api/sessions/00000000-0000-0000-0000-000000000000")
         assertEquals(HttpStatusCode.NotFound, response.status)
     }
 
-    @Test fun `GET api sessions filtered by instrumentId returns only matching sessions`() = testApp {
+    @Test
+    fun `GET api sessions filtered by instrumentId returns only matching sessions`() = testApp {
         val i1 = createInstrumentId()
         val i2 = createInstrumentId()
         createSession(i1)
@@ -95,7 +114,8 @@ class SessionRoutesTest {
         assertEquals(i1, sessions[0].jsonObject["instrumentId"]?.jsonPrimitive?.content)
     }
 
-    @Test fun `PUT api sessions id updates endTime and notes`() = testApp {
+    @Test
+    fun `PUT api sessions id updates endTime and notes`() = testApp {
         val instrumentId = createInstrumentId()
         val created = createSession(instrumentId)
         val id = created["id"]!!.jsonPrimitive.content
@@ -109,7 +129,8 @@ class SessionRoutesTest {
         assertEquals("Great session", body["notes"]?.jsonPrimitive?.content)
     }
 
-    @Test fun `DELETE api sessions id returns 204 then GET returns 404`() = testApp {
+    @Test
+    fun `DELETE api sessions id returns 204 then GET returns 404`() = testApp {
         val instrumentId = createInstrumentId()
         val created = createSession(instrumentId)
         val id = created["id"]!!.jsonPrimitive.content
@@ -119,12 +140,42 @@ class SessionRoutesTest {
         assertEquals(HttpStatusCode.NotFound, getResponse.status)
     }
 
-    @Test fun `DELETE instrument cascades to its sessions`() = testApp {
+    @Test
+    fun `DELETE instrument cascades to its sessions`() = testApp {
         val instrumentId = createInstrumentId()
         val created = createSession(instrumentId)
         val sessionId = created["id"]!!.jsonPrimitive.content
         client.delete("/api/instruments/$instrumentId")
         val response = client.get("/api/sessions/$sessionId")
         assertEquals(HttpStatusCode.NotFound, response.status)
+    }
+
+    @Test
+    fun `POST api sessions accepts client id endTime and notes`() = testApp {
+        val instrumentId = createInstrumentId()
+        val clientId = "11111111-1111-1111-1111-111111111111"
+
+        val response = jsonClient().post("/api/sessions") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """
+                {
+                    "id": "$clientId",
+                    "instrumentId": "$instrumentId",
+                    "startTime": "2026-01-01T10:00:00Z",
+                    "endTime": "2026-01-01T11:00:00Z",
+                    "notes": "Great session"
+                }
+            """.trimIndent()
+            )
+        }
+
+        assertEquals(HttpStatusCode.Created, response.status)
+
+        val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+        assertEquals(clientId, body["id"]?.jsonPrimitive?.content)
+        assertEquals(instrumentId, body["instrumentId"]?.jsonPrimitive?.content)
+        assertNotNull(body["endTime"]?.jsonPrimitive?.content)
+        assertEquals("Great session", body["notes"]?.jsonPrimitive?.content)
     }
 }
