@@ -1,6 +1,7 @@
 package dmitrykovalev.stringlife
 
 import dmitrykovalev.stringlife.plugins.configureDatabase
+import dmitrykovalev.stringlife.plugins.configureOpenApi
 import dmitrykovalev.stringlife.plugins.configureRouting
 import dmitrykovalev.stringlife.plugins.configureSerialization
 import io.ktor.server.application.*
@@ -12,4 +13,5 @@ fun Application.module() {
     configureDatabase()
     configureSerialization()
     configureRouting()
+    configureOpenApi()
 }
