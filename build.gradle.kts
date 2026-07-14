@@ -1,4 +1,4 @@
-val ktorVersion = "3.0.3"
+val ktorVersion = "3.5.1"
 val exposedVersion = "0.57.0"
 val kotlinxDatetimeVersion = "0.6.1"
 val logbackVersion = "1.5.12"
@@ -8,9 +8,10 @@ val junitVersion = "5.10.1"
 val h2Version = "2.2.224"
 
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("plugin.serialization") version "2.1.0"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    kotlin("jvm") version "2.4.0"
+    kotlin("plugin.serialization") version "2.4.0"
+    id("io.ktor.plugin") version "3.5.1"
+    id("com.gradleup.shadow") version "9.1.0"
     application
 }
 
@@ -19,6 +20,14 @@ version = "0.0.1"
 
 application {
     mainClass.set("dmitrykovalev.stringlife.ApplicationKt")
+}
+
+ktor {
+    openApi {
+        this.enabled.set(true)
+        this.codeInferenceEnabled.set(true)
+        this.onlyCommented.set(false)
+    }
 }
 
 repositories {
@@ -31,6 +40,10 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+
+    implementation("io.ktor:ktor-server-openapi:$ktorVersion")
+    implementation("io.ktor:ktor-server-swagger:$ktorVersion")
+    implementation("io.ktor:ktor-server-routing-openapi:$ktorVersion")
 
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
@@ -63,11 +76,9 @@ tasks.shadowJar {
 tasks.named<JavaExec>("run") {
     val envFile = file(".env")
     if (envFile.exists()) {
-        envFile.readLines()
-            .filter { it.isNotBlank() && !it.startsWith("#") }
-            .forEach { line ->
-                val (key, value) = line.split("=", limit = 2)
-                environment(key.trim(), value.trim())
-            }
+        envFile.readLines().filter { it.isNotBlank() && !it.startsWith("#") }.forEach { line ->
+            val (key, value) = line.split("=", limit = 2)
+            environment(key.trim(), value.trim())
+        }
     }
 }
