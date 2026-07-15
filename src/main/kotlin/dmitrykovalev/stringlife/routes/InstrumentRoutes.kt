@@ -1,6 +1,6 @@
 package dmitrykovalev.stringlife.routes
 
-import dmitrykovalev.stringlife.models.InstrumentRequest
+import dmitrykovalev.stringlife.api.dto.InstrumentRequest
 import dmitrykovalev.stringlife.repositories.InstrumentRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive

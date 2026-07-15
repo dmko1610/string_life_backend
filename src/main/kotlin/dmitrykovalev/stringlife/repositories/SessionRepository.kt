@@ -1,9 +1,9 @@
 package dmitrykovalev.stringlife.repositories
 
 import dmitrykovalev.stringlife.db.tables.Sessions
-import dmitrykovalev.stringlife.models.Session
-import dmitrykovalev.stringlife.models.SessionRequest
-import dmitrykovalev.stringlife.models.SessionUpdateRequest
+import dmitrykovalev.stringlife.api.dto.Session
+import dmitrykovalev.stringlife.api.dto.SessionRequest
+import dmitrykovalev.stringlife.api.dto.SessionUpdateRequest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.sql.ResultRow
