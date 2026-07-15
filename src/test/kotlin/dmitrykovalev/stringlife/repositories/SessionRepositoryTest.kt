@@ -28,7 +28,7 @@ class SessionRepositoryTest {
     fun resetDb() = TestDatabase.reset()
 
     private fun createInstrument() =
-        instrumentRepo.create(InstrumentRequest("Telecaster", "Electric", 6))
+        instrumentRepo.create(InstrumentRequest("Telecaster", "ELECTRIC", 6))
 
     private fun aSessionRequest(instrumentId: String) =
         SessionRequest(instrumentId = instrumentId, startTime = "2026-01-01T10:00:00Z")

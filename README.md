@@ -64,7 +64,7 @@ Base path: `/api`
 ```json
 {
   "name": "Telecaster",
-  "type": "Electric",
+  "type": "ELECTRIC",
   "stringCount": 6,
   "lastStringChangeDate": "2026-01-15",
   "notes": "Optional notes"

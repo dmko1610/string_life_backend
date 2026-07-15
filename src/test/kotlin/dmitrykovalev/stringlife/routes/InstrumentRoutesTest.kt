@@ -38,7 +38,7 @@ class InstrumentRoutesTest {
 
     private suspend fun ApplicationTestBuilder.createInstrument(
         name: String = "Stratocaster",
-        type: String = "Electric",
+        type: String = "ELECTRIC",
         stringCount: Int = 6
     ): JsonObject {
         val response = jsonClient().post("/api/instruments") {
@@ -57,12 +57,31 @@ class InstrumentRoutesTest {
     @Test fun `POST api instruments creates instrument and returns 201`() = testApp {
         val response = jsonClient().post("/api/instruments") {
             contentType(ContentType.Application.Json)
-            setBody("""{"name":"Stratocaster","type":"Electric","stringCount":6}""")
+            setBody("""{"name":"Stratocaster","type":"ELECTRIC","stringCount":6}""")
         }
         assertEquals(HttpStatusCode.Created, response.status)
         val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
         assertEquals("Stratocaster", body["name"]?.jsonPrimitive?.content)
+        assertEquals("ELECTRIC", body["type"]?.jsonPrimitive?.content)
         assertTrue(body["id"]?.jsonPrimitive?.content?.isNotEmpty() == true)
+    }
+
+    @Test fun `POST api instruments accepts legacy type aliases and returns canonical type`() = testApp {
+        val response = jsonClient().post("/api/instruments") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"name":"Stratocaster","type":"electro","stringCount":6}""")
+        }
+        assertEquals(HttpStatusCode.Created, response.status)
+        val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+        assertEquals("ELECTRIC", body["type"]?.jsonPrimitive?.content)
+    }
+
+    @Test fun `POST api instruments rejects unsupported type`() = testApp {
+        val response = jsonClient().post("/api/instruments") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"name":"Stratocaster","type":"MANDOLIN","stringCount":6}""")
+        }
+        assertEquals(HttpStatusCode.BadRequest, response.status)
     }
 
     @Test fun `GET api instruments id returns created instrument`() = testApp {
@@ -84,18 +103,19 @@ class InstrumentRoutesTest {
         val id = created["id"]!!.jsonPrimitive.content
         val response = jsonClient().put("/api/instruments/$id") {
             contentType(ContentType.Application.Json)
-            setBody("""{"name":"Les Paul","type":"Electric","stringCount":6,"notes":"Vintage"}""")
+            setBody("""{"name":"Les Paul","type":"ELECTRIC","stringCount":6,"notes":"Vintage"}""")
         }
         assertEquals(HttpStatusCode.OK, response.status)
         val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
         assertEquals("Les Paul", body["name"]?.jsonPrimitive?.content)
+        assertEquals("ELECTRIC", body["type"]?.jsonPrimitive?.content)
         assertEquals("Vintage", body["notes"]?.jsonPrimitive?.content)
     }
 
     @Test fun `PUT api instruments unknown id returns 404`() = testApp {
         val response = jsonClient().put("/api/instruments/00000000-0000-0000-0000-000000000000") {
             contentType(ContentType.Application.Json)
-            setBody("""{"name":"Les Paul","type":"Electric","stringCount":6}""")
+            setBody("""{"name":"Les Paul","type":"ELECTRIC","stringCount":6}""")
         }
         assertEquals(HttpStatusCode.NotFound, response.status)
     }

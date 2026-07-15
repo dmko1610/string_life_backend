@@ -53,7 +53,7 @@ class SessionRoutesTest {
     private suspend fun ApplicationTestBuilder.createInstrumentId(): String {
         val response = jsonClient().post("/api/instruments") {
             contentType(ContentType.Application.Json)
-            setBody("""{"name":"Guitar","type":"Electric","stringCount":6}""")
+            setBody("""{"name":"Guitar","type":"ELECTRIC","stringCount":6}""")
         }
         return Json.parseToJsonElement(response.bodyAsText()).jsonObject["id"]!!.jsonPrimitive.content
     }

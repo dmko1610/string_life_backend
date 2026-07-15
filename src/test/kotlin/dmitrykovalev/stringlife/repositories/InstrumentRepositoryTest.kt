@@ -23,14 +23,26 @@ class InstrumentRepositoryTest {
     @BeforeEach fun resetDb() = TestDatabase.reset()
 
     private fun aRequest(name: String = "Telecaster") =
-        InstrumentRequest(name = name, type = "Electric", stringCount = 6)
+        InstrumentRequest(name = name, type = "ELECTRIC", stringCount = 6)
 
     @Test fun `create and findById return the same instrument`() {
         val created = repo.create(aRequest())
         val found = repo.findById(UUID.fromString(created.id))
         assertEquals(created.id, found.id)
         assertEquals("Telecaster", found.name)
+        assertEquals("ELECTRIC", found.type)
         assertEquals(6, found.stringCount)
+    }
+
+    @Test fun `create normalizes legacy type aliases`() {
+        val created = repo.create(InstrumentRequest("Telecaster", "electro", 6))
+        assertEquals("ELECTRIC", created.type)
+    }
+
+    @Test fun `create throws for unsupported type`() {
+        assertThrows<IllegalArgumentException> {
+            repo.create(InstrumentRequest("Telecaster", "MANDOLIN", 6))
+        }
     }
 
     @Test fun `findAll returns all active instruments`() {
@@ -49,9 +61,11 @@ class InstrumentRepositoryTest {
         val created = repo.create(aRequest())
         val updated = repo.update(
             UUID.fromString(created.id),
-            InstrumentRequest("Les Paul", "Electric", 6, notes = "Vintage")
+            InstrumentRequest("Les Paul", "BASS", 4, notes = "Vintage")
         )
         assertEquals("Les Paul", updated.name)
+        assertEquals("BASS", updated.type)
+        assertEquals(4, updated.stringCount)
         assertEquals("Vintage", updated.notes)
     }
 

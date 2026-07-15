@@ -4,6 +4,7 @@ import dmitrykovalev.stringlife.db.tables.Instruments
 import dmitrykovalev.stringlife.db.tables.Sessions
 import dmitrykovalev.stringlife.api.dto.Instrument
 import dmitrykovalev.stringlife.api.dto.InstrumentRequest
+import dmitrykovalev.stringlife.api.dto.InstrumentType
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -35,9 +36,10 @@ class InstrumentRepository {
     }
 
     fun create(request: InstrumentRequest): Instrument = transaction {
+        val type = InstrumentType.from(request.type)
         val insertedId = Instruments.insert {
             it[name] = request.name
-            it[type] = request.type
+            it[Instruments.type] = type.name
             it[stringCount] = request.stringCount
             it[lastStringChangeDate] = request.lastStringChangeDate?.let { d -> LocalDate.parse(d) }
             it[notes] = request.notes
@@ -49,9 +51,10 @@ class InstrumentRepository {
     }
 
     fun update(id: UUID, request: InstrumentRequest): Instrument = transaction {
+        val type = InstrumentType.from(request.type)
         val count = Instruments.update({ (Instruments.id eq id) and Instruments.deletedAt.isNull() }) {
             it[name] = request.name
-            it[type] = request.type
+            it[Instruments.type] = type.name
             it[stringCount] = request.stringCount
             it[lastStringChangeDate] = request.lastStringChangeDate?.let { d -> LocalDate.parse(d) }
             it[notes] = request.notes
@@ -75,7 +78,7 @@ class InstrumentRepository {
     private fun ResultRow.toInstrument() = Instrument(
         id = this[Instruments.id].toString(),
         name = this[Instruments.name],
-        type = this[Instruments.type],
+        type = InstrumentType.from(this[Instruments.type]).name,
         stringCount = this[Instruments.stringCount],
         lastStringChangeDate = this[Instruments.lastStringChangeDate]?.toString(),
         notes = this[Instruments.notes],
