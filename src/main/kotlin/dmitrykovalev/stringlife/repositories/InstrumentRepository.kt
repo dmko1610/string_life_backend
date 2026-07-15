@@ -2,8 +2,8 @@ package dmitrykovalev.stringlife.repositories
 
 import dmitrykovalev.stringlife.db.tables.Instruments
 import dmitrykovalev.stringlife.db.tables.Sessions
-import dmitrykovalev.stringlife.models.Instrument
-import dmitrykovalev.stringlife.models.InstrumentRequest
+import dmitrykovalev.stringlife.api.dto.Instrument
+import dmitrykovalev.stringlife.api.dto.InstrumentRequest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate

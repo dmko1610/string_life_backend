@@ -1,9 +1,9 @@
 package dmitrykovalev.stringlife.repositories
 
 import dmitrykovalev.stringlife.TestDatabase
-import dmitrykovalev.stringlife.models.InstrumentRequest
-import dmitrykovalev.stringlife.models.SessionRequest
-import dmitrykovalev.stringlife.models.SessionUpdateRequest
+import dmitrykovalev.stringlife.api.dto.InstrumentRequest
+import dmitrykovalev.stringlife.api.dto.SessionRequest
+import dmitrykovalev.stringlife.api.dto.SessionUpdateRequest
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

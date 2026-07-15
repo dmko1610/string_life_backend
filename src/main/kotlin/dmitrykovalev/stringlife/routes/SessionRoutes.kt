@@ -1,7 +1,7 @@
 package dmitrykovalev.stringlife.routes
 
-import dmitrykovalev.stringlife.models.SessionRequest
-import dmitrykovalev.stringlife.models.SessionUpdateRequest
+import dmitrykovalev.stringlife.api.dto.SessionRequest
+import dmitrykovalev.stringlife.api.dto.SessionUpdateRequest
 import dmitrykovalev.stringlife.repositories.SessionRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
